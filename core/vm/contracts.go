@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
@@ -147,8 +148,8 @@ func init() {
 	}
 }
 
-// ActivePrecompiles returns the precompiles enabled with the current configuration.
-func ActivePrecompiles(rules params.Rules) []common.Address {
+// DefaultActivePrecompiles returns the set of precompiles enabled with the default configuration.
+func DefaultActivePrecompiles(rules params.Rules) []common.Address {
 	switch {
 	case rules.IsCancun:
 		return PrecompiledAddressesCancun
@@ -161,6 +162,87 @@ func ActivePrecompiles(rules params.Rules) []common.Address {
 	default:
 		return PrecompiledAddressesHomestead
 	}
+}
+
+// DefaultPrecompiles define the mapping of address and precompiles from the default configuration
+func DefaultPrecompiles(rules params.Rules) (precompiles map[common.Address]PrecompiledContract) {
+	switch {
+	case rules.IsBerlin:
+		precompiles = PrecompiledContractsBerlin
+	case rules.IsIstanbul:
+		precompiles = PrecompiledContractsIstanbul
+	case rules.IsByzantium:
+		precompiles = PrecompiledContractsByzantium
+	default:
+		precompiles = PrecompiledContractsHomestead
+	}
+
+	return precompiles
+}
+
+// ActivePrecompiles returns the precompiles enabled with the current configuration.
+//
+// NOTE: The rules argument is ignored as the active precompiles can be set via the WithPrecompiles
+// method according to the chain rules from the current block context.
+func (evm *EVM) ActivePrecompiles(_ params.Rules) []common.Address {
+	return evm.activePrecompiles
+}
+
+// Precompile returns a precompiled contract for the given address. This
+// function returns false if the address is not a registered precompile.
+func (evm *EVM) Precompile(addr common.Address) (PrecompiledContract, bool) {
+	p, ok := evm.precompiles[addr]
+	return p, ok
+}
+
+// WithPrecompiles sets the precompiled contracts and the slice of actives precompiles.
+// IMPORTANT: This function does NOT validate the precompiles provided to the EVM. The caller should
+// use the ValidatePrecompiles function for this purpose prior to calling WithPrecompiles.
+func (evm *EVM) WithPrecompiles(
+	precompiles map[common.Address]PrecompiledContract,
+	activePrecompiles []common.Address,
+) {
+	evm.precompiles = precompiles
+	evm.activePrecompiles = activePrecompiles
+}
+
+// ValidatePrecompiles validates the precompile map against the active
+// precompile slice.
+// It returns an error if the precompiled contract map has a different length
+// than the slice of active contract addresses. This function also checks for
+// duplicates, invalid addresses and empty precompile contract instances.
+func ValidatePrecompiles(
+	precompiles map[common.Address]PrecompiledContract,
+	activePrecompiles []common.Address,
+) error {
+	if len(precompiles) != len(activePrecompiles) {
+		return fmt.Errorf("precompiles length mismatch (expected %d, got %d)", len(precompiles), len(activePrecompiles))
+	}
+
+	dupActivePrecompiles := make(map[common.Address]bool)
+
+	for _, addr := range activePrecompiles {
+		if dupActivePrecompiles[addr] {
+			return fmt.Errorf("duplicate active precompile: %s", addr)
+		}
+
+		precompile, ok := precompiles[addr]
+		if !ok {
+			return fmt.Errorf("active precompile address doesn't exist in precompiles map: %s", addr)
+		}
+
+		if precompile == nil {
+			return fmt.Errorf("precompile contract cannot be nil: %s", addr)
+		}
+
+		if bytes.Equal(addr.Bytes(), common.Address{}.Bytes()) {
+			return fmt.Errorf("precompile cannot be the zero address: %s", addr)
+		}
+
+		dupActivePrecompiles[addr] = true
+	}
+
+	return nil
 }
 
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.
@@ -226,6 +308,7 @@ type sha256hash struct{}
 func (c *sha256hash) RequiredGas(input []byte) uint64 {
 	return uint64(len(input)+31)/32*params.Sha256PerWordGas + params.Sha256BaseGas
 }
+
 func (c *sha256hash) Run(input []byte) ([]byte, error) {
 	h := sha256.Sum256(input)
 	return h[:], nil
@@ -241,6 +324,7 @@ type ripemd160hash struct{}
 func (c *ripemd160hash) RequiredGas(input []byte) uint64 {
 	return uint64(len(input)+31)/32*params.Ripemd160PerWordGas + params.Ripemd160BaseGas
 }
+
 func (c *ripemd160hash) Run(input []byte) ([]byte, error) {
 	ripemd := ripemd160.New()
 	ripemd.Write(input)
@@ -257,6 +341,7 @@ type dataCopy struct{}
 func (c *dataCopy) RequiredGas(input []byte) uint64 {
 	return uint64(len(input)+31)/32*params.IdentityPerWordGas + params.IdentityBaseGas
 }
+
 func (c *dataCopy) Run(in []byte) ([]byte, error) {
 	return common.CopyBytes(in), nil
 }
