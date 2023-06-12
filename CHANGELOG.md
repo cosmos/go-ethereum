@@ -35,7 +35,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+## `v1.10.26-evmos-rc2` - 2023-06-12
+
+### Improvements
+
+* [#23](https://github.com/evmos/go-ethereum/pull/23) Remove `IsStateful` function from the `PrecompiledContract` interface, as this remains unused.
+
+### State Machine Breaking
+
+* [#24](https://github.com/evmos/go-ethereum/pull/24) Set `callcode` to use `readOnly` mode for precompiled calls.
+
+
+## `v1.10.26-evmos-rc1` - 2022-02-03
 
 ### State Machine Breaking
 
