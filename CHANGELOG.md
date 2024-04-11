@@ -35,6 +35,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+
+## `v1.10.26-evmos-rc3` - 2024-04-11
+
+### Improvements
+
+* [#26](https://github.com/evmos/go-ethereum/pull/26) PreExecuteCallback for Call opcodes
+
 ## `v1.10.26-evmos-rc2` - 2023-06-12
 
 ### Improvements
