@@ -1,18 +1,5 @@
-// Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// Copyright Tharsis Labs Ltd.(Evmos)
+// SPDX-License-Identifier:ENCL-1.0(https://github.com/evmos/evmos/blob/main/LICENSE)
 
 package vm
 
@@ -107,6 +94,16 @@ type EVM struct {
 	precompiles map[common.Address]PrecompiledContract
 	// activePrecompiles defines the precompiles that are currently active
 	activePrecompiles []common.Address
+
+	// preExecuteCallback is a callback function that is called before executing
+	// CALL, CALLCODE, DELEGATECALL and STATICCALL opcodes.
+	preExecuteCallback preExecuteCallbackType
+}
+
+type preExecuteCallbackType func(evm *EVM, addr common.Address) error
+
+func dummyCallback(evm *EVM, addr common.Address) error {
+	return nil
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
@@ -124,12 +121,33 @@ func NewEVM(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig
 		}
 	}
 	evm := &EVM{
-		Context:     blockCtx,
-		TxContext:   txCtx,
-		StateDB:     statedb,
-		Config:      config,
-		chainConfig: chainConfig,
-		chainRules:  chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
+		Context:            blockCtx,
+		TxContext:          txCtx,
+		StateDB:            statedb,
+		Config:             config,
+		chainConfig:        chainConfig,
+		chainRules:         chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
+		preExecuteCallback: dummyCallback,
+	}
+	// set the default precompiles
+	evm.activePrecompiles = DefaultActivePrecompiles(evm.chainRules)
+	evm.precompiles = DefaultPrecompiles(evm.chainRules)
+	evm.interpreter = NewEVMInterpreter(evm)
+
+	return evm
+}
+
+// NewEVMWithCallback returns a new EVM and takes a custom preExecuteCallback. The returned EVM is
+// not thread safe and should only ever be used *once*.
+func NewEVMWithCallback(callback preExecuteCallbackType, blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig *params.ChainConfig, config Config) *EVM {
+	evm := &EVM{
+		Context:            blockCtx,
+		TxContext:          txCtx,
+		StateDB:            statedb,
+		Config:             config,
+		chainConfig:        chainConfig,
+		chainRules:         chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
+		preExecuteCallback: callback,
 	}
 	// set the default precompiles
 	evm.activePrecompiles = DefaultActivePrecompiles(evm.chainRules)
@@ -172,6 +190,11 @@ func (evm *EVM) WithInterpreter(interpreter Interpreter) {
 // the necessary steps to create accounts and reverses the state in case of an
 // execution error or failed value transfer.
 func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas uint64, value *uint256.Int) (ret []byte, leftOverGas uint64, err error) {
+	err = evm.preExecuteCallback(evm, addr)
+	if err != nil {
+		return nil, gas, err
+	}
+
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
@@ -180,6 +203,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	if !value.IsZero() && !evm.Context.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, gas, ErrInsufficientBalance
 	}
+
 	snapshot := evm.StateDB.Snapshot()
 	p, isPrecompile := evm.Precompile(addr)
 	debug := evm.Config.Tracer != nil
@@ -260,6 +284,11 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 // CallCode differs from Call in the sense that it executes the given address'
 // code with the caller as context.
 func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, gas uint64, value *uint256.Int) (ret []byte, leftOverGas uint64, err error) {
+	err = evm.preExecuteCallback(evm, addr)
+	if err != nil {
+		return nil, gas, err
+	}
+
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
@@ -308,6 +337,11 @@ func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, 
 // DelegateCall differs from CallCode in the sense that it executes the given address'
 // code with the caller as context and the caller is set to the caller of the caller.
 func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []byte, gas uint64) (ret []byte, leftOverGas uint64, err error) {
+	err = evm.preExecuteCallback(evm, addr)
+	if err != nil {
+		return nil, gas, err
+	}
+
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
@@ -351,6 +385,11 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 // Opcodes that attempt to perform such modifications will result in exceptions
 // instead of performing the modifications.
 func (evm *EVM) StaticCall(caller ContractRef, addr common.Address, input []byte, gas uint64) (ret []byte, leftOverGas uint64, err error) {
+	err = evm.preExecuteCallback(evm, addr)
+	if err != nil {
+		return nil, gas, err
+	}
+
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
