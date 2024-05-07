@@ -116,12 +116,12 @@ func NewEVM(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig
 		}
 	}
 	evm := &EVM{
-		Context:            blockCtx,
-		TxContext:          txCtx,
-		StateDB:            statedb,
-		Config:             config,
-		chainConfig:        chainConfig,
-		chainRules:         chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
+		Context:     blockCtx,
+		TxContext:   txCtx,
+		StateDB:     statedb,
+		Config:      config,
+		chainConfig: chainConfig,
+		chainRules:  chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
 		hooks:       newNoopOpCodeHooks(),
 	}
 	// set the default precompiles
@@ -136,12 +136,12 @@ func NewEVM(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig
 // not thread safe and should only ever be used *once*.
 func NewEVMWithHooks(hooks OpCodeHooks, blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig *params.ChainConfig, config Config) *EVM {
 	evm := &EVM{
-		Context:            blockCtx,
-		TxContext:          txCtx,
-		StateDB:            statedb,
-		Config:             config,
-		chainConfig:        chainConfig,
-		chainRules:         chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
+		Context:     blockCtx,
+		TxContext:   txCtx,
+		StateDB:     statedb,
+		Config:      config,
+		chainConfig: chainConfig,
+		chainRules:  chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil, blockCtx.Time),
 		hooks:       hooks,
 	}
 	// set the default precompiles

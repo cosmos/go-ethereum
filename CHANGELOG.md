@@ -35,6 +35,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## `v1.10.26-evmos-rc4` - 2024-05-07
+
+### Improvements
+
+* [#28](https://github.com/evmos/go-ethereum/pull/28) OpCodesHooks for CREATE and CALL opcodes
 
 ## `v1.10.26-evmos-rc3` - 2024-04-11
 
