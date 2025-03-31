@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-
-	"golang.org/x/exp/maps"
 )
 
 // OpCodeInfo contains information required to identify an EVM operation.
@@ -69,7 +67,12 @@ func ExtendOperations(
 // the activators map.
 // Used only in tests.
 func GetActivatorsEipNames() []string {
-	keys := maps.Keys(activators)
+	keys := make([]string, 0, len(activators))
+	i := 0
+	for k, _ := range activators {
+		keys[i] = k
+		i++
+	}
 
 	sort.Strings(keys)
 	return keys
