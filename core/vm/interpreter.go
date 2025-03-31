@@ -28,7 +28,8 @@ type Config struct {
 	Tracer                  EVMLogger // Opcode logger
 	NoBaseFee               bool      // Forces the EIP-1559 baseFee to 0 (needed for 0 price calls)
 	EnablePreimageRecording bool      // Enables recording of SHA3/keccak preimages
-	ExtraEips               []int     // Additional EIPS that are to be enabled
+
+	ExtraEips []string // Additional EIPS that are to be enabled
 }
 
 // ScopeContext contains the things that are per-call, such as stack and memory,
@@ -57,7 +58,7 @@ type EVMInterpreter struct {
 func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 	// If jump table was not initialised we set the default one.
 	table := DefaultJumpTable(evm.chainRules)
-	var extraEips []int
+	var extraEips []string
 	if len(evm.Config.ExtraEips) > 0 {
 		// Deep-copy jumptable to prevent modification of opcodes in other tables
 		table = CopyJumpTable(table)
@@ -72,6 +73,31 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 	}
 	evm.Config.ExtraEips = extraEips
 	return &EVMInterpreter{evm: evm, table: table}
+}
+
+// EVM returns the EVM instance
+func (in *EVMInterpreter) EVM() *EVM {
+	return in.evm
+}
+
+// Config returns the configuration of the interpreter
+func (in EVMInterpreter) Config() Config {
+	return in.evm.Config
+}
+
+// ReadOnly returns whether the interpreter is in read-only mode
+func (in EVMInterpreter) ReadOnly() bool {
+	return in.readOnly
+}
+
+// ReturnData gets the last CALL's return data for subsequent reuse
+func (in *EVMInterpreter) ReturnData() []byte {
+	return in.returnData
+}
+
+// SetReturnData sets the last CALL's return data
+func (in *EVMInterpreter) SetReturnData(data []byte) {
+	in.returnData = data
 }
 
 // Run loops and evaluates the contract's code with the given input data and returns

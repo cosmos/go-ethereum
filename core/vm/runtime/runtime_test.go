@@ -512,7 +512,7 @@ func TestEip2929Cases(t *testing.T) {
 		Execute(code, nil, &Config{
 			EVMConfig: vm.Config{
 				Tracer:    logger.NewMarkdownLogger(nil, os.Stdout),
-				ExtraEips: []int{2929},
+				ExtraEips: []string{"ethereum_2929"},
 			},
 		})
 	}
