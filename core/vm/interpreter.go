@@ -29,7 +29,7 @@ type Config struct {
 	NoBaseFee               bool      // Forces the EIP-1559 baseFee to 0 (needed for 0 price calls)
 	EnablePreimageRecording bool      // Enables recording of SHA3/keccak preimages
 
-	ExtraEips []string // Additional EIPS that are to be enabled
+	ExtraEips []int // Additional EIPS that are to be enabled
 }
 
 // ScopeContext contains the things that are per-call, such as stack and memory,
@@ -58,7 +58,7 @@ type EVMInterpreter struct {
 func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 	// If jump table was not initialised we set the default one.
 	table := DefaultJumpTable(evm.chainRules)
-	var extraEips []string
+	var extraEips []int
 	if len(evm.Config.ExtraEips) > 0 {
 		// Deep-copy jumptable to prevent modification of opcodes in other tables
 		table = CopyJumpTable(table)

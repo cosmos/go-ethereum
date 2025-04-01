@@ -4133,7 +4133,7 @@ func TestTransientStorageReset(t *testing.T) {
 		destAddress = crypto.CreateAddress(address, 0)
 		funds       = big.NewInt(1000000000000000)
 		vmConfig    = vm.Config{
-			ExtraEips: []string{"ethereum_1153"}, // Enable transient storage EIP
+			ExtraEips: []int{1153}, // Enable transient storage EIP
 		}
 	)
 	code := append([]byte{

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -137,7 +138,7 @@ type stTransactionMarshaling struct {
 // The fork definition can be
 // - a plain forkname, e.g. `Byzantium`,
 // - a fork basename, and a list of EIPs to enable; e.g. `Byzantium+1884+1283`.
-func GetChainConfig(forkString string) (baseConfig *params.ChainConfig, eips []string, err error) {
+func GetChainConfig(forkString string) (baseConfig *params.ChainConfig, eips []int, err error) {
 	var (
 		splitForks            = strings.Split(forkString, "+")
 		ok                    bool
@@ -147,14 +148,14 @@ func GetChainConfig(forkString string) (baseConfig *params.ChainConfig, eips []s
 		return nil, nil, UnsupportedForkError{baseName}
 	}
 	for _, eip := range eipsStrings {
-		if !strings.HasPrefix(eip, "ethereum_") {
-			eip = fmt.Sprintf("ethereum_%s", eip)
+		if eipNum, err := strconv.Atoi(eip); err != nil {
+			return nil, nil, fmt.Errorf("syntax error, invalid eip number %v", eipNum)
+		} else {
+			if !vm.ValidEip(eipNum) {
+				return nil, nil, fmt.Errorf("syntax error, invalid eip number %v", eipNum)
+			}
+			eips = append(eips, eipNum)
 		}
-
-		if err := vm.ValidateEIPName(eip); err != nil {
-			return nil, nil, fmt.Errorf("syntax error, invalid eip number %v: %w", eip, err)
-		}
-		eips = append(eips, eip)
 	}
 	return baseConfig, eips, nil
 }
