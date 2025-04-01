@@ -33,7 +33,7 @@ type Config struct {
 
 	JumpTable *JumpTable // EVM instruction table, automatically populated if unset
 
-	ExtraEips []string // Additional EIPS that are to be enabled
+	ExtraEips []int // Additional EIPS that are to be enabled
 }
 
 // ScopeContext contains the things that are per-call, such as stack and memory,
@@ -72,11 +72,6 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 	if cfg.JumpTable == nil {
 		cfg.JumpTable = DefaultJumpTable(evm.chainRules)
 		for i, eip := range cfg.ExtraEips {
-			if len(cfg.ExtraEips) == 1 && eip == "\x8f\x1e" {
-				// The protobuf params changed so need to update the EIP for archive calls
-				eip = "ethereum_3855"
-			}
-
 			// Deep-copy jumptable to prevent modification of opcodes in other tables
 			copy := CopyJumpTable(cfg.JumpTable)
 			if err := EnableEIP(eip, copy); err != nil {

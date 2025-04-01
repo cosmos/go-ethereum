@@ -20,18 +20,18 @@ type Operation struct {
 
 // ExtendActivators allows to merge the go ethereum activators map
 // with additional custom activators.
-func ExtendActivators(eips map[string]func(*JumpTable)) error {
+func ExtendActivators(eips map[int]func(*JumpTable)) error {
 	// Catch early duplicated eip.
-	keys := make([]string, 0, len(eips))
+	keys := make([]int, 0, len(eips))
 	for k := range eips {
-		if ExistsEipActivator(k) {
-			return fmt.Errorf("duplicate activation: %s is already present in %s", k, ActivateableEips())
+		if ValidEip(k) {
+			return fmt.Errorf("duplicate activation: %d is already present in %s", k, ActivateableEips())
 		}
 		keys = append(keys, k)
 	}
 
 	// Sorting keys to ensure deterministic execution.
-	sort.Strings(keys)
+	sort.Ints(keys)
 
 	for _, k := range keys {
 		activators[k] = eips[k]
@@ -66,15 +66,15 @@ func ExtendOperations(
 // GetActivatorsEipNames returns the name of EIPs registered in
 // the activators map.
 // Used only in tests.
-func GetActivatorsEipNames() []string {
-	keys := make([]string, 0, len(activators))
+func GetActivatorsEipNames() []int {
+	keys := make([]int, 0, len(activators))
 	i := 0
 	for k, _ := range activators {
 		keys[i] = k
 		i++
 	}
 
-	sort.Strings(keys)
+	sort.Ints(keys)
 	return keys
 }
 

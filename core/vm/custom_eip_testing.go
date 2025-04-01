@@ -9,12 +9,12 @@
 
 package vm
 
-var originalActivators = make(map[string]func(*JumpTable))
+var originalActivators = make(map[int]func(*JumpTable))
 
 func init() {
 	keys := GetActivatorsEipNames()
 
-	originalActivators = make(map[string]func(*JumpTable), len(keys))
+	originalActivators = make(map[int]func(*JumpTable), len(keys))
 
 	for _, k := range keys {
 		originalActivators[k] = activators[k]
@@ -23,7 +23,7 @@ func init() {
 
 // ResetActivators resets activators to the original go ethereum activators map
 func ResetActivators() {
-	activators = make(map[string]func(*JumpTable))
+	activators = make(map[int]func(*JumpTable))
 	for k, v := range originalActivators {
 		activators[k] = v
 	}
