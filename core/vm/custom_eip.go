@@ -44,10 +44,8 @@ func ExtendActivators(eips map[int]func(*JumpTable)) error {
 // Used only in tests.
 func GetActivatorsEipNumbers() []int {
 	keys := make([]int, 0, len(activators))
-	i := 0
 	for k, _ := range activators {
-		keys[i] = k
-		i++
+		keys = append(keys, k)
 	}
 
 	sort.Ints(keys)
