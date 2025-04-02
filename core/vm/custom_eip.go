@@ -39,6 +39,21 @@ func ExtendActivators(eips map[int]func(*JumpTable)) error {
 	return nil
 }
 
+// GetActivatorsEipNumbers returns the keys of EIPs registered in
+// the activators map.
+// Used only in tests.
+func GetActivatorsEipNumbers() []int {
+	keys := make([]int, 0, len(activators))
+	i := 0
+	for k, _ := range activators {
+		keys[i] = k
+		i++
+	}
+
+	sort.Ints(keys)
+	return keys
+}
+
 // ExtendOperations returns an instance of the new operation and register it in the list
 // of available ones.
 // Return an error if an operation with the same name is already present.
@@ -61,21 +76,6 @@ func ExtendOperations(
 	op := &Operation{operation}
 
 	return op, nil
-}
-
-// GetActivatorsEipNames returns the name of EIPs registered in
-// the activators map.
-// Used only in tests.
-func GetActivatorsEipNames() []int {
-	keys := make([]int, 0, len(activators))
-	i := 0
-	for k, _ := range activators {
-		keys[i] = k
-		i++
-	}
-
-	sort.Ints(keys)
-	return keys
 }
 
 // newOperation returns an instance of a new EVM operation.
