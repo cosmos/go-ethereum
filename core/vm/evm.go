@@ -114,7 +114,7 @@ type EVM struct {
 	Config Config
 	// global (to this context) ethereum virtual machine
 	// used throughout the execution of the tx.
-	interpreter *EVMInterpreter
+	interpreter Interpreter
 	// abort is used to abort the EVM calling operations
 	abort atomic.Bool
 	// callGasTemp holds the gas available for the current call. This is needed because the
@@ -168,8 +168,13 @@ func (evm *EVM) Cancelled() bool {
 }
 
 // Interpreter returns the current interpreter
-func (evm *EVM) Interpreter() *EVMInterpreter {
+func (evm *EVM) Interpreter() Interpreter {
 	return evm.interpreter
+}
+
+// WithInterpreter sets the interpreter to the EVM instance
+func (evm *EVM) WithInterpreter(interpreter Interpreter) {
+	evm.interpreter = interpreter
 }
 
 // Call executes the contract associated with the addr with the given input as
