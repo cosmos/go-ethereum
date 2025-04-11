@@ -12,7 +12,7 @@ package vm
 var originalActivators = make(map[int]func(*JumpTable))
 
 func init() {
-	keys := GetActivatorsEipNames()
+	keys := GetActivatorsEipNumbers()
 
 	originalActivators = make(map[int]func(*JumpTable), len(keys))
 
