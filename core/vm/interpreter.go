@@ -56,37 +56,11 @@ type EVMInterpreter struct {
 // NewEVMInterpreter returns a new instance of the Interpreter.
 func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 	// If jump table was not initialised we set the default one.
-	var table *JumpTable
-	switch {
-	case evm.chainRules.IsCancun:
-		table = &cancunInstructionSet
-	case evm.chainRules.IsShanghai:
-		table = &shanghaiInstructionSet
-	case evm.chainRules.IsMerge:
-		table = &mergeInstructionSet
-	case evm.chainRules.IsLondon:
-		table = &londonInstructionSet
-	case evm.chainRules.IsBerlin:
-		table = &berlinInstructionSet
-	case evm.chainRules.IsIstanbul:
-		table = &istanbulInstructionSet
-	case evm.chainRules.IsConstantinople:
-		table = &constantinopleInstructionSet
-	case evm.chainRules.IsByzantium:
-		table = &byzantiumInstructionSet
-	case evm.chainRules.IsEIP158:
-		table = &spuriousDragonInstructionSet
-	case evm.chainRules.IsEIP150:
-		table = &tangerineWhistleInstructionSet
-	case evm.chainRules.IsHomestead:
-		table = &homesteadInstructionSet
-	default:
-		table = &frontierInstructionSet
-	}
+	table := DefaultJumpTable(evm.chainRules)
 	var extraEips []int
 	if len(evm.Config.ExtraEips) > 0 {
 		// Deep-copy jumptable to prevent modification of opcodes in other tables
-		table = copyJumpTable(table)
+		table = CopyJumpTable(table)
 	}
 	for _, eip := range evm.Config.ExtraEips {
 		if err := EnableEIP(eip, table); err != nil {
