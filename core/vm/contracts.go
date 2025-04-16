@@ -209,7 +209,7 @@ func DefaultActivePrecompiles(rules params.Rules) []common.Address {
 func DefaultPrecompiles(rules params.Rules) (precompiles map[common.Address]PrecompiledContract) {
 	switch {
 	case rules.IsCancun:
-		return PrecompiledContractsCancun
+		precompiles = PrecompiledContractsCancun
 	case rules.IsBerlin:
 		precompiles = PrecompiledContractsBerlin
 	case rules.IsIstanbul:
