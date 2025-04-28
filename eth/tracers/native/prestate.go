@@ -142,7 +142,7 @@ func (t *prestateTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64,
 		return
 	}
 	stack := scope.Stack
-	stackData := stack.Data()
+	stackData := stack.Data
 	stackLen := len(stackData)
 	caller := scope.Contract.Address()
 	switch {
