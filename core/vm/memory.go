@@ -114,3 +114,9 @@ func (m *Memory) Copy(dst, src, len uint64) {
 	}
 	copy(m.store[dst:], m.store[src:src+len])
 }
+
+// GasCost calculates the quadratic gas for memory expansion. It does so
+// only for the memory region that is expanded, not the total memory.
+func (m *Memory) GasCost(newMemSize uint64) (uint64, error) {
+	return memoryGasCost(m, newMemSize)
+}
