@@ -76,7 +76,7 @@ func fuzz(id byte, data []byte) int {
 	}
 	cpy := make([]byte, len(data))
 	copy(cpy, data)
-	contract := vm.NewPrecompile(vm.AccountRef(common.Address{}), precompile, common.U2560, gas)
+	contract := vm.NewPrecompile(common.Address{}, precompile.Address(), common.U2560, gas)
 	contract.Input = cpy
 	_, err := precompile.Run(nil, contract, false)
 	if !bytes.Equal(cpy, data) {

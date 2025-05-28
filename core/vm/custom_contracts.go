@@ -3,6 +3,7 @@ package vm
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -39,7 +40,6 @@ func (evm *EVM) WithPrecompiles(precompiles map[common.Address]PrecompiledContra
 func ValidatePrecompiles(
 	precompiles PrecompiledContracts,
 ) error {
-
 	dupActivePrecompiles := make(map[common.Address]bool)
 
 	for addr, precompile := range precompiles {
