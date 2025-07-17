@@ -64,7 +64,7 @@ type BlockChain interface {
 // They exit the pool when they are included in the blockchain or evicted due to
 // resource constraints.
 type TxPool struct {
-	subpools []SubPool // List of subpools for specialized transaction handling
+	Subpools []SubPool // List of Subpools for specialized transaction handling
 	chain    BlockChain
 	signer   types.Signer
 
@@ -81,7 +81,7 @@ type TxPool struct {
 // New creates a new transaction pool to gather, sort and filter inbound
 // transactions from the network.
 func New(gasTip uint64, chain BlockChain, subpools []SubPool) (*TxPool, error) {
-	// Retrieve the current head so that all subpools and this main coordinator
+	// Retrieve the current head so that all Subpools and this main coordinator
 	// pool will have the same starting state, even if the chain moves forward
 	// during initialization.
 	head := chain.CurrentBlock()
@@ -97,7 +97,7 @@ func New(gasTip uint64, chain BlockChain, subpools []SubPool) (*TxPool, error) {
 		return nil, err
 	}
 	pool := &TxPool{
-		subpools: subpools,
+		Subpools: subpools,
 		chain:    chain,
 		signer:   types.LatestSigner(chain.Config()),
 		state:    statedb,
@@ -118,7 +118,7 @@ func New(gasTip uint64, chain BlockChain, subpools []SubPool) (*TxPool, error) {
 	return pool, nil
 }
 
-// Close terminates the transaction pool and all its subpools.
+// Close terminates the transaction pool and all its Subpools.
 func (p *TxPool) Close() error {
 	var errs []error
 
@@ -129,7 +129,7 @@ func (p *TxPool) Close() error {
 		errs = append(errs, err)
 	}
 	// Terminate each subpool
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		if err := subpool.Close(); err != nil {
 			errs = append(errs, err)
 		}
@@ -198,7 +198,7 @@ func (p *TxPool) loop(head *types.Header) {
 
 				// Busy marker injected, start a new subpool reset
 				go func(oldHead, newHead *types.Header) {
-					for _, subpool := range p.subpools {
+					for _, subpool := range p.Subpools {
 						subpool.Reset(oldHead, newHead)
 					}
 					select {
@@ -260,7 +260,7 @@ func (p *TxPool) loop(head *types.Header) {
 // SetGasTip updates the minimum gas tip required by the transaction pool for a
 // new transaction, and drops all transactions below this threshold.
 func (p *TxPool) SetGasTip(tip *big.Int) {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		subpool.SetGasTip(tip)
 	}
 }
@@ -268,7 +268,7 @@ func (p *TxPool) SetGasTip(tip *big.Int) {
 // Has returns an indicator whether the pool has a transaction cached with the
 // given hash.
 func (p *TxPool) Has(hash common.Hash) bool {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		if subpool.Has(hash) {
 			return true
 		}
@@ -278,7 +278,7 @@ func (p *TxPool) Has(hash common.Hash) bool {
 
 // Get returns a transaction if it is contained in the pool, or nil otherwise.
 func (p *TxPool) Get(hash common.Hash) *types.Transaction {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		if tx := subpool.Get(hash); tx != nil {
 			return tx
 		}
@@ -288,7 +288,7 @@ func (p *TxPool) Get(hash common.Hash) *types.Transaction {
 
 // GetRLP returns a RLP-encoded transaction if it is contained in the pool.
 func (p *TxPool) GetRLP(hash common.Hash) []byte {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		encoded := subpool.GetRLP(hash)
 		if len(encoded) != 0 {
 			return encoded
@@ -300,7 +300,7 @@ func (p *TxPool) GetRLP(hash common.Hash) []byte {
 // GetMetadata returns the transaction type and transaction size with the given
 // hash.
 func (p *TxPool) GetMetadata(hash common.Hash) *TxMetadata {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		if meta := subpool.GetMetadata(hash); meta != nil {
 			return meta
 		}
@@ -312,7 +312,7 @@ func (p *TxPool) GetMetadata(hash common.Hash) *TxMetadata {
 // This is a utility method for the engine API, enabling consensus clients to
 // retrieve blobs from the pools directly instead of the network.
 func (p *TxPool) GetBlobs(vhashes []common.Hash) ([]*kzg4844.Blob, []*kzg4844.Proof) {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		// It's an ugly to assume that only one pool will be capable of returning
 		// anything meaningful for this call, but anythingh else requires merging
 		// partial responses and that's too annoying to do until we get a second
@@ -331,13 +331,13 @@ func (p *TxPool) GetBlobs(vhashes []common.Hash) ([]*kzg4844.Blob, []*kzg4844.Pr
 // Note, if sync is set the method will block until all internal maintenance
 // related to the add is finished. Only use this during tests for determinism.
 func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
-	// Split the input transactions between the subpools. It shouldn't really
+	// Split the input transactions between the Subpools. It shouldn't really
 	// happen that we receive merged batches, but better graceful than strange
 	// errors.
 	//
-	// We also need to track how the transactions were split across the subpools,
+	// We also need to track how the transactions were split across the Subpools,
 	// so we can piece back the returned errors into the original order.
-	txsets := make([][]*types.Transaction, len(p.subpools))
+	txsets := make([][]*types.Transaction, len(p.Subpools))
 	splits := make([]int, len(txs))
 
 	for i, tx := range txs {
@@ -345,7 +345,7 @@ func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
 		splits[i] = -1
 
 		// Try to find a subpool that accepts the transaction
-		for j, subpool := range p.subpools {
+		for j, subpool := range p.Subpools {
 			if subpool.Filter(tx) {
 				txsets[j] = append(txsets[j], tx)
 				splits[i] = j
@@ -353,15 +353,15 @@ func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
 			}
 		}
 	}
-	// Add the transactions split apart to the individual subpools and piece
+	// Add the transactions split apart to the individual Subpools and piece
 	// back the errors into the original sort order.
-	errsets := make([][]error, len(p.subpools))
-	for i := 0; i < len(p.subpools); i++ {
-		errsets[i] = p.subpools[i].Add(txsets[i], sync)
+	errsets := make([][]error, len(p.Subpools))
+	for i := 0; i < len(p.Subpools); i++ {
+		errsets[i] = p.Subpools[i].Add(txsets[i], sync)
 	}
 	errs := make([]error, len(txs))
 	for i, split := range splits {
-		// If the transaction was rejected by all subpools, mark it unsupported
+		// If the transaction was rejected by all Subpools, mark it unsupported
 		if split == -1 {
 			errs[i] = fmt.Errorf("%w: received type %d", core.ErrTxTypeNotSupported, txs[i].Type())
 			continue
@@ -380,7 +380,7 @@ func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
 // reduce allocations and load on downstream subsystems.
 func (p *TxPool) Pending(filter PendingFilter) map[common.Address][]*LazyTransaction {
 	txs := make(map[common.Address][]*LazyTransaction)
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		for addr, set := range subpool.Pending(filter) {
 			txs[addr] = set
 		}
@@ -391,8 +391,8 @@ func (p *TxPool) Pending(filter PendingFilter) map[common.Address][]*LazyTransac
 // SubscribeTransactions registers a subscription for new transaction events,
 // supporting feeding only newly seen or also resurrected transactions.
 func (p *TxPool) SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs bool) event.Subscription {
-	subs := make([]event.Subscription, len(p.subpools))
-	for i, subpool := range p.subpools {
+	subs := make([]event.Subscription, len(p.Subpools))
+	for i, subpool := range p.Subpools {
 		subs[i] = subpool.SubscribeTransactions(ch, reorgs)
 	}
 	return p.subs.Track(event.JoinSubscriptions(subs...))
@@ -401,11 +401,11 @@ func (p *TxPool) SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs bool) 
 // PoolNonce returns the next nonce of an account, with all transactions executable
 // by the pool already applied on top.
 func (p *TxPool) PoolNonce(addr common.Address) uint64 {
-	// Since (for now) accounts are unique to subpools, only one pool will have
+	// Since (for now) accounts are unique to Subpools, only one pool will have
 	// (at max) a non-state nonce. To avoid stateful lookups, just return the
 	// highest nonce for now.
 	var nonce uint64
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		if next := subpool.Nonce(addr); nonce < next {
 			nonce = next
 		}
@@ -426,7 +426,7 @@ func (p *TxPool) Nonce(addr common.Address) uint64 {
 // number of queued (non-executable) transactions.
 func (p *TxPool) Stats() (int, int) {
 	var runnable, blocked int
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		run, block := subpool.Stats()
 
 		runnable += run
@@ -442,7 +442,7 @@ func (p *TxPool) Content() (map[common.Address][]*types.Transaction, map[common.
 		runnable = make(map[common.Address][]*types.Transaction)
 		blocked  = make(map[common.Address][]*types.Transaction)
 	)
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		run, block := subpool.Content()
 
 		for addr, txs := range run {
@@ -458,7 +458,7 @@ func (p *TxPool) Content() (map[common.Address][]*types.Transaction, map[common.
 // ContentFrom retrieves the data content of the transaction pool, returning the
 // pending as well as queued transactions of this address, grouped by nonce.
 func (p *TxPool) ContentFrom(addr common.Address) ([]*types.Transaction, []*types.Transaction) {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		run, block := subpool.ContentFrom(addr)
 		if len(run) != 0 || len(block) != 0 {
 			return run, block
@@ -470,7 +470,7 @@ func (p *TxPool) ContentFrom(addr common.Address) ([]*types.Transaction, []*type
 // Status returns the known status (unknown/pending/queued) of a transaction
 // identified by its hash.
 func (p *TxPool) Status(hash common.Hash) TxStatus {
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		if status := subpool.Status(hash); status != TxStatusUnknown {
 			return status
 		}
@@ -495,16 +495,16 @@ func (p *TxPool) Sync() error {
 	}
 }
 
-// Clear removes all tracked txs from the subpools.
+// Clear removes all tracked txs from the Subpools.
 //
 // Note, this method invokes Sync() and is only used for testing, because it is
 // susceptible to DoS vectors. In production code, the pool is meant to reset on
 // a separate thread.
 func (p *TxPool) Clear() {
 	// Invoke Sync to ensure that txs pending addition don't get added to the pool after
-	// the subpools are subsequently cleared
+	// the Subpools are subsequently cleared
 	p.Sync()
-	for _, subpool := range p.subpools {
+	for _, subpool := range p.Subpools {
 		subpool.Clear()
 	}
 }

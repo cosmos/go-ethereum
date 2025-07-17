@@ -35,7 +35,7 @@ var (
 	reservationsGaugeName = "txpool/reservations"
 )
 
-// ReservationTracker is a struct shared between different subpools. It is used to reserve
+// ReservationTracker is a struct shared between different Subpools. It is used to reserve
 // the account and ensure that one address cannot initiate transactions, authorizations,
 // and other state-changing behaviors in different pools at the same time.
 type ReservationTracker struct {
@@ -57,7 +57,7 @@ func (r *ReservationTracker) NewHandle(id int) *ReservationHandle {
 }
 
 // Reserver is an interface for creating and releasing owned reservations in the
-// ReservationTracker struct, which is shared between subpools.
+// ReservationTracker struct, which is shared between Subpools.
 type Reserver interface {
 	// Hold attempts to reserve the specified account address for the given pool.
 	// Returns an error if the account is already reserved.
@@ -72,7 +72,7 @@ type Reserver interface {
 	Has(address common.Address) bool
 }
 
-// ReservationHandle is a named handle on ReservationTracker. It is held by subpools to
+// ReservationHandle is a named handle on ReservationTracker. It is held by Subpools to
 // make reservations for accounts it is tracking. The id is used to determine
 // which pool owns an address and disallows non-owners to hold or release
 // addresses it doesn't own.
@@ -109,7 +109,7 @@ func (h *ReservationHandle) Release(addr common.Address) error {
 	h.tracker.lock.Lock()
 	defer h.tracker.lock.Unlock()
 
-	// Ensure subpools only attempt to unreserve their own owned addresses,
+	// Ensure Subpools only attempt to unreserve their own owned addresses,
 	// otherwise flag as a programming error.
 	owner, exists := h.tracker.accounts[addr]
 	if !exists {

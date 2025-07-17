@@ -92,7 +92,7 @@ type TxMetadata struct {
 // blob pool). Since independent of how many specialized pools we have, they do
 // need to be updated in lockstep and assemble into one coherent view for block
 // production, this interface defines the common methods that allow the primary
-// transaction pool to manage the subpools.
+// transaction pool to manage the Subpools.
 type SubPool interface {
 	// Filter is a selector used to decide whether a transaction would be added
 	// to this particular subpool.
@@ -103,7 +103,7 @@ type SubPool interface {
 	// start up.
 	//
 	// These should not be passed as a constructor argument - nor should the pools
-	// start by themselves - in order to keep multiple subpools in lockstep with
+	// start by themselves - in order to keep multiple Subpools in lockstep with
 	// one another.
 	Init(gasTip uint64, head *types.Header, reserver Reserver) error
 
