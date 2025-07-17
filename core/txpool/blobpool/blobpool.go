@@ -1847,3 +1847,7 @@ func (p *BlobPool) Clear() {
 	)
 	p.evict = newPriceHeap(basefee, blobfee, p.index)
 }
+
+func (p *BlobPool) RemoveTx(hash common.Hash, outofbound bool, unreserve bool) int {
+	panic("unimplemented")
+}

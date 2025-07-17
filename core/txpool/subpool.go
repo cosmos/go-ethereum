@@ -183,4 +183,7 @@ type SubPool interface {
 
 	// Clear removes all tracked transactions from the pool
 	Clear()
+
+	// RemoveTx removes a tracked transaction from the pool
+	RemoveTx(hash common.Hash, outofbound bool, unreserve bool) int
 }
