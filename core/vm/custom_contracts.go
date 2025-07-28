@@ -55,6 +55,10 @@ func ValidatePrecompiles(
 			return fmt.Errorf("precompile cannot be the zero address: %s", addr)
 		}
 
+		if !bytes.Equal(addr.Bytes(), precompile.Address().Bytes()) {
+			return fmt.Errorf("precompile address mismatch: %s != %s", addr, precompile.Address())
+		}
+
 		dupActivePrecompiles[addr] = true
 	}
 
