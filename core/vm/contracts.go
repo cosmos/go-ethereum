@@ -862,7 +862,7 @@ type bls12381G1Add struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381G1Add) Address() common.Address {
-	return common.BytesToAddress([]byte{10})
+	return common.BytesToAddress([]byte{0x0b})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -904,7 +904,7 @@ type bls12381G1MultiExp struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381G1MultiExp) Address() common.Address {
-	return common.BytesToAddress([]byte{12})
+	return common.BytesToAddress([]byte{0x0c})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -970,7 +970,7 @@ type bls12381G2Add struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381G2Add) Address() common.Address {
-	return common.BytesToAddress([]byte{13})
+	return common.BytesToAddress([]byte{0x0d})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -1013,7 +1013,7 @@ type bls12381G2MultiExp struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381G2MultiExp) Address() common.Address {
-	return common.BytesToAddress([]byte{15})
+	return common.BytesToAddress([]byte{0x0e})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -1079,7 +1079,7 @@ type bls12381Pairing struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381Pairing) Address() common.Address {
-	return common.BytesToAddress([]byte{16})
+	return common.BytesToAddress([]byte{0x0f})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -1237,7 +1237,7 @@ type bls12381MapG1 struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381MapG1) Address() common.Address {
-	return common.BytesToAddress([]byte{17})
+	return common.BytesToAddress([]byte{0x10})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -1272,7 +1272,7 @@ type bls12381MapG2 struct{}
 // Address defines the precompiled contract address. This MUST match the address
 // set in the precompiled contract map.
 func (bls12381MapG2) Address() common.Address {
-	return common.BytesToAddress([]byte{18})
+	return common.BytesToAddress([]byte{0x11})
 }
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
