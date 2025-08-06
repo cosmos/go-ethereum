@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"math"
 	"math/big"
 	"sync/atomic"
 
@@ -411,6 +412,11 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 		return nil, common.Address{}, gas, ErrInsufficientBalance
 	}
 	nonce := evm.StateDB.GetNonce(caller.Address())
+	// EIP-2681: creator nonce == 2^64-1 → creation fails; no initcode gas is charged.
+	if nonce == math.MaxUint64 {
+		return nil, common.Address{}, gas, ErrNonceMax
+	}
+	// Generic overflow guard (kept for completeness).
 	if nonce+1 < nonce {
 		return nil, common.Address{}, gas, ErrNonceUintOverflow
 	}
