@@ -36,6 +36,9 @@ var (
 	ErrGasUintOverflow          = errors.New("gas uint64 overflow")
 	ErrInvalidCode              = errors.New("invalid code: must not begin with 0xef")
 	ErrNonceUintOverflow        = errors.New("nonce uint64 overflow")
+	// EIP-2681: attempt to CREATE/CREATE2 when creator nonce == 2^64-1.
+	// Handled in EVM.create; opcode handlers will observe a non-nil suberr and push 0.
+	ErrNonceMax = errors.New("create on account with max nonce violates EIP-2681")
 
 	// errStopToken is an internal token indicating interpreter loop termination,
 	// never returned to outside callers.
