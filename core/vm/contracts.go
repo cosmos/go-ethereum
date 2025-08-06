@@ -1396,20 +1396,26 @@ func (c *p256Verify) RequiredGas(input []byte) uint64 {
 }
 
 // Run executes the precompiled contract with given 160 bytes of param, returning the output and the used gas
-func (c *p256Verify) Run(input []byte) ([]byte, error) {
+func (c *p256Verify) Run(evm *EVM, contract *Contract, readonly bool) ([]byte, error) {
 	const p256VerifyInputLength = 160
-	if len(input) != p256VerifyInputLength {
+	if len(contract.Input) != p256VerifyInputLength {
 		return nil, nil
 	}
 
 	// Extract hash, r, s, x, y from the input.
-	hash := input[0:32]
-	r, s := new(big.Int).SetBytes(input[32:64]), new(big.Int).SetBytes(input[64:96])
-	x, y := new(big.Int).SetBytes(input[96:128]), new(big.Int).SetBytes(input[128:160])
+	hash := contract.Input[0:32]
+	r, s := new(big.Int).SetBytes(contract.Input[32:64]), new(big.Int).SetBytes(contract.Input[64:96])
+	x, y := new(big.Int).SetBytes(contract.Input[96:128]), new(big.Int).SetBytes(contract.Input[128:160])
 
 	// Verify the signature.
 	if secp256r1.Verify(hash, r, s, x, y) {
 		return true32Byte, nil
 	}
 	return nil, nil
+}
+
+// Address defines the precompiled contract address. This MUST match the address
+// set in the precompiled contract map.
+func (c *p256Verify) Address() common.Address {
+	return common.BytesToAddress([]byte{0x1, 0x00})
 }
