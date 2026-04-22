@@ -310,7 +310,7 @@ func (evm *EVM) Call(caller common.Address, addr common.Address, input []byte, g
 	}
 
 	if isPrecompile {
-		ret, gas, err = evm.RunPrecompiledContract(p, caller, input, gas, value, false, evm.Config.Tracer)
+		ret, gas, err = evm.RunPrecompiledContract(p, caller, input, gas, value, evm.readOnly, evm.Config.Tracer)
 	} else {
 		// Initialise a new contract and set the code that is to be used by the EVM.
 		code := evm.resolveCode(addr)
