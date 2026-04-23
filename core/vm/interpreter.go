@@ -260,3 +260,18 @@ func (evm *EVM) Run(contract *Contract, input []byte, readOnly bool) (ret []byte
 
 	return res, err
 }
+
+// ReadOnly returns whether the interpreter is in read-only mode
+func (evm *EVM) ReadOnly() bool {
+	return evm.readOnly
+}
+
+// ReturnData gets the last CALL's return data for subsequent reuse
+func (evm *EVM) ReturnData() []byte {
+	return evm.returnData
+}
+
+// SetReturnData sets the last CALL's return data
+func (evm *EVM) SetReturnData(data []byte) {
+	evm.returnData = data
+}
